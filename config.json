@@ -1,0 +1,22 @@
+{
+  "source": ["tokens/**/*.json"],
+  "platforms": {
+    "ios-swift": {
+      "transforms": [
+        "name/camel",
+        "color/ColorSwiftUI"
+      ],
+      "buildPath": "build/ios-swift/",
+      "files": [
+        {
+          "destination": "Lighthouse+Colours.swift",
+          "format": "ios-swift/enum.swift",
+          "options": {
+            "className": "LighthouseColor",
+            "import": ["SwiftUI"]
+          }
+        }
+      ]
+    }
+  }
+}
