@@ -19,7 +19,7 @@ export default ({ dictionary, options }) => {
 
 import SwiftUI
 
-public enum ${options.className} {
+public extension Color {
 ${declarations.join("\n\n")}
 }
 
