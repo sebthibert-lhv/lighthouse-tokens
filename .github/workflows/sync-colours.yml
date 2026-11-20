@@ -1,0 +1,74 @@
+name: Sync colours
+
+# Regenerates the Lighthouse colours from the tokens and opens (or updates)
+# a pull request in each platform's components repo with the result.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tokens/**"
+      - "config.json"
+      - ".github/workflows/sync-colours.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-colours
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Sync ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # TODO: set repo (owner/repo) and dest (file path inside that repo).
+          - platform: iOS
+            repo: OWNER/IOS-REPO
+            source: build/ios-swift/LighthouseColor.swift
+            dest: Sources/Components/LighthouseColor.swift
+          - platform: Android
+            repo: OWNER/ANDROID-REPO
+            source: build/compose/LighthouseColor.kt
+            dest: components/src/main/kotlin/com/lhv/lighthouse/LighthouseColor.kt
+    steps:
+      - name: Check out tokens
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate colours
+        run: npx --yes style-dictionary@4.4.0 build
+
+      - name: Check out ${{ matrix.platform }} components repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo }}
+          token: ${{ secrets.COMPONENTS_REPO_TOKEN }}
+          path: components
+
+      - name: Copy generated file
+        env:
+          SOURCE: ${{ matrix.source }}
+          DEST: ${{ matrix.dest }}
+        run: |
+          mkdir -p "components/$(dirname "$DEST")"
+          cp "$SOURCE" "components/$DEST"
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          path: components
+          token: ${{ secrets.COMPONENTS_REPO_TOKEN }}
+          branch: lighthouse/update-colours
+          delete-branch: true
+          commit-message: Update Lighthouse colours
+          title: Update Lighthouse colours
+          body: |
+            Regenerated `${{ matrix.dest }}` from the Lighthouse design tokens.
+
+            Source commit: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
