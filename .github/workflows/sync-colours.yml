@@ -8,7 +8,8 @@ on:
     branches: [main]
     paths:
       - "tokens/**"
-      - "config.json"
+      - "config.mjs"
+      - "style-dictionary/**"
       - ".github/workflows/sync-colours.yml"
   workflow_dispatch:
 
@@ -29,7 +30,7 @@ jobs:
           - platform: iOS
             repo: lighthouse-ios
             source: build/ios-swift/LighthouseColor.swift
-            dest: Sources/Lighthouse/LighthouseColor.swift
+            dest: Sources/Lighthouse/Tokens/LighthouseColor.swift
     steps:
       - name: Check out tokens
         uses: actions/checkout@v4
@@ -39,7 +40,7 @@ jobs:
           node-version: 22
 
       - name: Generate colours
-        run: npx --yes style-dictionary@4.4.0 build
+        run: npx --yes style-dictionary@4.4.0 build --config config.mjs
 
       - name: Create GitHub App token
         id: app-token
